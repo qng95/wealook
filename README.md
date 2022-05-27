@@ -49,23 +49,23 @@ Is an platform where user can check the weather condition of locations around th
 * Get 5 days forecast weather condition of cities base on user's filter F
 
 ### Resources \& Models 
-#### d_location
+#### Table: d_location
 * id 
 * city 
 * country 
 * capital
-#### f_user_preference (GPDR compliance -> only userId should be preferenced)
+#### Table: f_user_preference (GPDR compliance -> only userId should be preferenced)
 * id
 * user_id
 * home_location_id
-#### f_filter
+#### Table: f_filter
 * id
 * filter_name
 * user_id
 * temp_from
 * temp_to
 * weather_cond
-#### f_weather
+#### Table: f_weather
 * location_id (index by this)
 * repoch (received dt - UTC)
 * temp
@@ -81,6 +81,14 @@ Is an platform where user can check the weather condition of locations around th
 * rainvol_3h
 * snowvol_3h
 * rdate (YYYY-MM-DD, partition by this)
+
+#### Define
+* f_:
+  * Fact table: changed/updated base on user's action
+* d_:
+  * Dimension table: more or less static data, changed/updated occasionally.
+
+![dataTable](dataTables.png)
 
 ### Rest API 
 - /api/v1 (versioning)
@@ -274,48 +282,62 @@ Is an platform where user can check the weather condition of locations around th
 * Material-UI
 * Redux
 
-### Wireframe
+#### Wireframe
 
-#### Pages
+##### Pages
 * Home
   ![homePageWireFrame.png](homePageWireFrame.png)
 * FilterCollection
   ![filtersPageWirefame.png](filtersPageWirefame.png)
-* Filter
+  * Filter
+  ![filteredPage.png](filteredPage.png)
 
-#### Usage Flow
+##### Usage Flow
 * At beginning:
-  * User will be landing on **Home** page.
+  * landing on **Home** page.
 * At **Home** Page:
-  * User landing at **Home** page, and the weather condition for next 5 days will be shown on each **WeatherCard**.
-  * User search for city they want to see the weather on **NavBar/AutoCompletionSearch**.
+  * The weather condition for selected/home location for next 5 days will be shown on each **WeatherCard**.
+  * User search for city they want to see the weather on **AutoCompletionSearch**.
   * User press **LocationButton** to set back to their current location.
   * User press **CollectionButton** to navigate to **FilterCollection** page.
 * At **FilterCollection** Page:
+  * All filters belong to the user will be shown as **FilterCard** on **FilterCardGrid**
   * User press **HomeButton** to navigate back to **Home** page.
-  * User search for filter by name on **NavBar/AutoCompletionSearch**.
+  * User search for filter by name on **AutoCompletionSearch**.
   * User press **AddFilterBtn** to add new filter, this will navigate User to the **Filter** page of that new filter.
   * User press **FilterCard** to navigate to **Filter** page of that filter.
-  * User press **FilterCard/DeleteFilterBtn** to delete a filter from the their filter collection.
+  * User press **DeleteFilterBtn** on **FilterCard** to delete a filter from the their filter collection.
 * At **Filter** Page:
-* 
+  * Only city that match the criteria of the filter will be shown on **FilteredCityCardGrid**
+  * User press **CollectionButton** to go back to **FilterCollection** page
+  * User press **SaveButton** to save the current filter criterias.
+  * user press **ResetButton** to reset the filter criteria to last saved state.
+  * User press **ClearAllButton** to clear all criteria.
+  * User enter city/region in the **CityRegionAutoCompletionSearch** to search and add city/region to the filter.
+  * User press **ConditionSwitch** to turn on/off search criteria for weather condition (E.g: filter Sunny or Rainy cities only).
+  * User slide on **TemperatureSlider** to select the temperature range to filter cities.
+  * Selected cities and regions will be present as a small chip in **SelectedCityRegionList**
+  * User click the "X" icon on **SelectedCityRegionChip** to clear the city/region from the filter.
 
-### UI-Components
+### UI-Components \& Re-usability
+* Label (cross platform)
+* DeletableChip (cross platform)
+* ChipList (cross platform)
 * Card
-  * WeatherCard
-  * FilterCard
+  * WeatherCard (cross platform)
+  * FilterCard (cross platform)
+* CardGrid (cross platform)
+* Switch (cross platform)
+* StepRangeSlider (cross platform)
 * Button
-  * HomeButton
-  * LocationButton
-  * DeleteOneButton
-  * DeleteAllButton
-  * CollectionButton
+  * IconButton (cross platform)
 * Bar
-  * TopBar
+  * NavBar (cross platform)
     * ButtonLeft
-    * AutoCompletionSearchField
-    * ButtonRight
-  * SideBar
+      * AutoCompletionSearchField
+      * ButtonRight
+  * FilterBar
+    * FilterSideBar (web browser only)
 
 ### Backend
 
@@ -328,21 +350,43 @@ Is an platform where user can check the weather condition of locations around th
 * WeatherApiPort (Interface) -> define method for interacting with weather api
   * OpenWeatherApiAdapater (Implementation) -> implementation for calling openweather api
 * Repository (ORM and auto wired by Django)
-* Cache
-  * CacheWithTimeout -> data will be invalidate after 1h/3h and new DB query is needed
+  * Models
+* RepoCache
+  * CacheWithTimeout -> data will be invalidate after 1h/3h and new DB query is needed.
 * Services
-  * WeatherService -> 
-  * LocationService -> get from Cache and filter base on filter criteria
-* RestController -> 
+  * DomainService -> abstraction from the implementation of the Repository and Cache)
+    * WeatherService
+      * get weather of a city
+      * get weather of a collection of cities
+    * LocationService
+      * get detail of a city (city name, country, region)
+      * get a collection of cities base on countries, regions, and also cities
+  * ApplicationService -> aggregated services that tranform filter data before handling out to client side.
+    * WeatherFilterService
+      * get weather of a city
+      * get weather of a list of cities
+      * get weather of all cities of a county
+      * get weather of all cities of a region
+      * filter weather base on criteria (temp range, weather condition)
+* RestController -> receive input and validation
+  * handle rest request and delegate to corresponding ApplicationService
 
-##### Those are core component which is possible for extending in future when we use event for:
+### Database
+* DBMS: PostgreSQL 14 (Google Cloud Platform Managed SQL)
+
+
+## Scale in future
+
+#### In comparison: 
+* AirBnB have 100.000 locations available on website.
+* MSN Weather have hourly forecast for the next 16 day.
+
+#### Back-end solution:
+* weather data should be consider as time-series and should be stored in proper time-series database.
 * change command from RestController will fire an event, then Repository will action on that event to update DB.
 * weather api adapater is call periodically to get weather data and fire an event so that Repository will know to persist the new data to DB.
 * successful update transaction from Repository will fire an event to inform Cache to update it local cache object.
 * query for data should should try from Cache object first, if miss then call Repository to get data from DB.
 
-
-
-### Database
-* DBMS: PostgreSQL 14 (Google Cloud Platform Managed SQL)
+#### Frontend solution:
 
