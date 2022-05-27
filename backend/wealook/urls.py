@@ -1,7 +1,8 @@
-from django.urls import path
+from django.urls import re_path
 
 from . import views
 
 urlpatterns = [
-    path('', views.index, name='index'),
+    re_path(r'^api/cities$', views.cities_list),
+    re_path(r'^api/weather/(?P<location_id>.+)/$', views.weather)
 ]

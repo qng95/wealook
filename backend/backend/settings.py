@@ -38,13 +38,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'corsheaders',
-
     'rest_framework',
+    'corsheaders',
+    'wealook.apps.WealookConfig',
 ]
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -81,8 +82,15 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'wealook_app',
+        'OPTIONS': {
+                'options': '-c search_path=muller_travel,public'
+            },
+        'USER': 'wealook_user',
+        'PASSWORD': '22082105',
+        'HOST': '34.159.134.154',
+        'PORT': '5432',
     }
 }
 
@@ -106,10 +114,12 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # CORS
+CORS_ORIGIN_ALLOW_ALL = False
 CORS_ORIGIN_WHITELIST = [
     # DEV servers
     'http://localhost:8000',
     'http://localhost:3000',
+    'http://localhost:8081',
 ]
 
 # Internationalization
