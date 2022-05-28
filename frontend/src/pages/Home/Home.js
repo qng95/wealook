@@ -96,7 +96,7 @@ function Home(props) {
   return (
     <Container sx={{ minWidth: '100%', bgcolor: 'primary.main'}}>
       <Stack direction="row" justifyContent="left" alignItems="stretch">
-        <Container sx={{minWith: '70%'}} >
+        <Container sx={{ml: 0}} >
           <Typography sx={{color: 'primary.light', pt: 4, pl:4}} variant="h5">
             <LocationOnRoundedIcon/> 
             Frankfurt Am Main

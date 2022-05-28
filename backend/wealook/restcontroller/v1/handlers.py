@@ -4,7 +4,8 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 
 from wealook.core.models import Weather, Location
-from wealook.core.serializer.weather import WeatherSerializer
+from wealook.core.serializer import WeatherSerializer, LocationSerializer
+from wealook.services.domain import LocationService
 
 
 @api_view(['GET', 'PUT'])
@@ -41,7 +42,7 @@ def filter_details(request, userid, filterid):
 
 @api_view(['GET'])
 def cities(request):
-    locations = Location.objects.all()
+    locations = LocationService.getAllCities()
     tutorials_serializer = LocationSerializer(locations, many=True)
 
     return_mess = {'result': status.HTTP_200_OK,
@@ -57,7 +58,7 @@ def cities(request):
 def weather_single_location(request, locationid):
     # find tutorial by pk (id)
     try:
-        tutorial = Weather.filter_by_location(locationid)
+        tutorial = Weather.objects.filter(location_id=locationid)
         print(locationid)
         tutorial_serializer = WeatherSerializer(tutorial, many=True)
         return JsonResponse(tutorial_serializer.data, safe=False)
