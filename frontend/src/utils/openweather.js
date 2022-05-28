@@ -2,7 +2,7 @@ import {
   NA, Thunderstorm, Lightning,
   Sprinkle, Rain, RainMix, Showers, StormShowers, Smoke,
   Snow, Sleet, DayHaze, Dust, Fog, CloudyGusts, Tornado, Cloud, DaySunny, DaySunnyOvercast, Cloudy
-} from "./weatherIcons";
+} from "./icon";
 
 const WEATHER_COND_CODE = {
   200: {

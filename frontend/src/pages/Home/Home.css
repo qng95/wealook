@@ -1,0 +1,11 @@
+.MuiTabs-scrollButtons.Mui-disabled {
+  opacity: 0.3 !important;
+}
+
+.MuiTabs-scrollButtons {
+  color: lightskyblue !important;
+}
+
+.MuiTabs-scrollButtons > svg {
+  font-size: 3rem !important;
+}
