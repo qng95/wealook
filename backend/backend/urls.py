@@ -16,8 +16,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+from wealook.restcontroller import API_VERSION
+
+# Rest API only
 urlpatterns = [
-    path('', include('wealook.urls')),
+    path('', include(f'wealook.restcontroller.{API_VERSION}.urls')),
     path('admin/', admin.site.urls),
-    path('api-auth/', include('rest_framework.urls')),
+    # path('api-auth/', include('rest_framework.urls')),
 ]
