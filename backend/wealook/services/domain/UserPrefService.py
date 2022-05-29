@@ -13,11 +13,13 @@ class _UserPrefService:
 
     def getUserPreference(self, user_id):
         obj, created = self.model.objects.get_or_create(user_id=user_id)
-
-    def updateUserPreference(self, **data):
-        id = data['id']
-        obj, created = self.model.objects.update_or_create(id=id, defaults=data)
         return obj
+
+    def updateUserPreference(self, data):
+        user_id = data['user_id']
+        user_pref = self.getUserPreference(user_id)
+        setattr(user_pref, 'home_location_id', data['home_location_id'])
+        user_pref.save()
 
 
 UserPrefService = _UserPrefService()

@@ -1,16 +1,21 @@
 import React, {useEffect, useState} from 'react';
 import { Link } from 'react-router-dom';
+
 import {Typography, Autocomplete, Container, IconButton, Stack, Tabs,Box, AppBar, Toolbar} from "@mui/material";
 import {MyLocation, BurstMode} from "@mui/icons-material";
 import SearchIcon from '@mui/icons-material/Search';
 import InputBase from '@mui/material/InputBase';
+import { styled, alpha } from '@mui/material/styles';
+import HomeRoundedIcon from '@mui/icons-material/HomeRounded';
 
 import WeatherCard from "../../components/WeatherCard/WeatherCard";
 import WeatherHourCard from "../../components/WeatherCard/WeatherHourCard";
 import PageLoader from "../PageLoader/PageLoader";
-import { styled, alpha } from '@mui/material/styles';
+import api from "./../../api";
+import {testuser} from "../../stores/store";
+
 import './Home.css';
-import HomeRoundedIcon from '@mui/icons-material/HomeRounded';
+
 
 const _mockAllLocationAndRegion = [
   {name: "Frankfurt"},
@@ -76,17 +81,92 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 }));
 
 function Home(props) {
-  const [dataAvailable, setDataAvailable] = useState(false);
-  const [selectedValue, setSelectedValue] = useState('Thu 26');
+  const [dataAvailable, setDataAvailable] = useState(null);
+
+  const [initCities, setInitCities] = useState(false);
+  const [cities, setCities] = useState({});
+
+  const [initUserPref, setInitUserPref] = useState(false);
+  const [userPref, setUserPref] = useState({});
+
+  const [selectedCity, setSelectedCity] = useState(null);
+
+  const [initWeatherData, setInitWeatherData] = useState(false);
+  const [selectedForecast, setSelectedForecast] = useState({});
+  const [selectedDate, setSelectedDate] = useState('Thu 26');
+
+  useEffect(() => {
+    const getCitiesData = async () => {
+      const result = await api.get("/cities")
+      setCities(result.data.cities);
+      setInitCities(true);
+    };
+    if (!initCities) {
+      getCitiesData()
+    }
+  },[]);
+
+  useEffect(() => {
+    const getUserPref = async () => {
+      const result = await api.get(`/userpref/${testuser.id}`)
+      const user_home_location = result.data.home_location_id;
+      if (user_home_location === "") {
+        const mycity = await api.get(`/cities/mycity`)
+        const city = mycity.data;
+        const cityLocationId = city.id;
+        await api.put(`/userpref/${testuser.id}`, {
+          user_id: testuser.id,
+          home_location_id: cityLocationId
+        });
+        setUserPref(cityLocationId);
+        setSelectedCity(cityLocationId);
+      } else {
+        setUserPref(user_home_location);
+        setSelectedCity(user_home_location);
+      }
+      setInitUserPref(true);
+    };
+    if (!initUserPref) {
+      getUserPref();
+    }
+  },[]);
+
+  useEffect(() => {
+    const updateUserPref = async () => {
+      await api.put(`/userpref/${testuser.id}`, {
+        user_id: testuser.id,
+        home_location_id: userPref
+      });
+    };
+    if (initUserPref) {
+      updateUserPref();
+    }
+  }, [userPref]);
+
+  useEffect(() => {
+    const fetchWeatherData = async () => {
+      const result = await api.get(`/weather/s/${selectedCity}`, {
+        mode: 'today'
+      });
+      const weatherdata = result.data.weather;
+      setSelectedForecast(weatherdata);
+      setInitWeatherData(true);
+    };
+
+    if (!initWeatherData && selectedCity) {
+      fetchWeatherData();
+    }
+  }, [selectedCity]);
+
+  useEffect(() => {
+    setDataAvailable(initCities && initUserPref && initWeatherData);
+  }, [initCities, initUserPref, initWeatherData]);
+
 
   const onWeatherCardSelected = (event, newValue) => {
     console.log("Event " + newValue);
-    setSelectedValue(newValue);
+    setSelectedDate(newValue);
   }
-
-  useEffect(() => {
-    setDataAvailable(true);
-  },[])
 
   if (!dataAvailable) {
     return (
@@ -120,7 +200,7 @@ function Home(props) {
                 freeSolo /*value can be any does not have to be in the allLocationAndRegion list*/
                 disableClearable
                 id="locationSearch"
-                options={_mockAllLocationAndRegion.map((option) => option.name)}
+                options={cities.map((option) => option.city_ascii)}
                 renderInput={(params) => (
                   <Search>
                     <SearchIconWrapper>
@@ -156,11 +236,11 @@ function Home(props) {
         variant="scrollable"
         sx={{px:3, pt:20, pb:5}}
         scrollButtons={true}
-        value={selectedValue}
+        value={selectedDate}
         indicatorColor="primary"
       >
         {_mockWeatherConditions.map((item) => (
-            (selectedValue === item.date) 
+            (selectedDate === item.date)
             ? <WeatherCard value={item.date} onClick={onWeatherCardSelected} key={item.date} bgcolor={'secondary.main'} txtcolor={'primary.main'} {...item}/>
             : <WeatherCard value={item.date} onClick={onWeatherCardSelected} key={item.date} bgcolor={'third.dark'} txtcolor={'primary.light'} {...item}/>  
         ))}

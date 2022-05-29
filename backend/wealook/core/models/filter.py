@@ -14,10 +14,11 @@ class Filter(models.Model):
     Volumm: mm
     """
     name = models.CharField(max_length=255, blank=False, default='')
-    temp_from = models.FloatField(blank=True, default=-100.00)
-    temp_to = models.FloatField(blank=True, default=100.00)
+    temp_from = models.FloatField(blank=True, default=174.00) # -100 Celcius
+    temp_to = models.FloatField(blank=True, default=374.00) # 100 Celcius
     weather_cond = models.CharField(max_length=len(_ALL_WEATHER_COND), blank=True, default=_ALL_WEATHER_COND)
     regions = models.TextField(blank=True, default='')
+    countries_iso3 = models.TextField(blank=True, default='')
     cities = models.TextField(blank=True, default='')
     user_id = models.CharField(max_length=255, blank=False, default='')
 

@@ -12,4 +12,6 @@ class FilterSerializer(serializers.ModelSerializer):
                   'temp_to',
                   'weather_cond',
                   'regions',
-                  'cities')
+                  'cities',
+                  'user_id',
+                  'countries_iso3')

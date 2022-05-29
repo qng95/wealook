@@ -1,24 +1,23 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
+import {useNavigate, Link} from "react-router-dom";
 import {
   Autocomplete,
   Container,
   Grid,
   IconButton,
   Stack,
-AppBar, Box, Toolbar, Typography
+  AppBar, Box, Toolbar, Typography
 } from "@mui/material";
 import {DeleteSweep, Home} from "@mui/icons-material";
-import {Link} from "react-router-dom";
 import FilterCard from "../../components/FilterCard/FilterCard";
 import { styled, alpha } from '@mui/material/styles';
 import InputBase from '@mui/material/InputBase';
 import SearchIcon from '@mui/icons-material/Search';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-
-const _mockAllLocationAndRegion = [
-  {name: "Frankfurt"},
-  {name: "Kakao"},
-]
+import {testuser} from "../../stores/store";
+import PageLoader from "../PageLoader/PageLoader";
+import api from "../../api";
+import _ from 'lodash';
 
 const _mockFilters = [
   {filterId: 'id1', filterName: 'NewYork Cities'},
@@ -74,6 +73,63 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 }));
 
 function Filters(props) {
+  const navigate = useNavigate();
+  const [initFilters, setInitFilters] = useState(false)
+  const [filters, setFilters] = useState(null)
+  const [filteredFilters, setFilteredFilters] = useState(null);
+
+  const fetchFilters = async () => {
+    const result = await api.get(`/filters/${testuser.id}`);
+    const filters_data = result.data.filters;
+    setFilters(filters_data);
+    setFilteredFilters(filters_data.filter(_f => (1===1)))
+    setInitFilters(true);
+  };
+
+  useEffect(() => {
+    if (!initFilters) {
+      fetchFilters();
+    }
+  }, []);
+
+  const addFilter = async () => {
+    const result = await api.post(`/filters/${testuser.id}`);
+    const newFilterData = result.data
+    navigate(`/filters/${newFilterData.id}`);
+  }
+
+  const deleteAllFilters = async () => {
+    const result = await api.delete(`/filters/${testuser.id}`);
+    await fetchFilters();
+  }
+
+  const deleteOneFilter = async (id) => {
+    const result = await api.delete(`/filters/${testuser.id}/${id}`);
+    await fetchFilters();
+  }
+
+  const updateFilterName = async (id, newName) => {
+    await api.put(`/filters/${testuser.id}/${id}`, {
+      id: id,
+      name: newName
+    });
+  }
+  const debouncedSearchChange = _.debounce(function (event) {
+    const searchVal = event.target.value;
+    if (searchVal === "") {
+      setFilteredFilters(filters.filter(_f => (1===1)))
+    } else {
+      const _filteredFilters = filters.filter(_f => (_f.name.startsWith(searchVal)))
+      setFilteredFilters(_filteredFilters)
+    }
+
+  }, 300);
+
+  if (!initFilters) {
+    return (
+      <PageLoader/>
+    );
+  }
   return (
     <Container sx={{ minWidth: '100%', bgcolor: 'primary.main'}}>
       <Box sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' }  }}>
@@ -101,7 +157,7 @@ function Filters(props) {
                 freeSolo /*value can be any does not have to be in the allLocationAndRegion list*/
                 disableClearable
                 id="locationSearch"
-                options={_mockAllLocationAndRegion.map((option) => option.name)}
+                options={filters.map((option) => option.name)}
                 renderInput={(params) => (
                   <Search>
                     <SearchIconWrapper>
@@ -110,18 +166,19 @@ function Filters(props) {
                     <StyledInputBase
                       {...params}
                       placeholder="Search filters"
-                      InputProps={{
-                        ...params.InputProps,
+                      inputProps={{
+                        ...params.inputProps,
                         type: 'search',
                       }}
+                      onChange={debouncedSearchChange}
                     />
                   </Search>
                 )}
               />
-              <IconButton aria-label="filter-collection" color="secondary">
+              <IconButton aria-label="filter-collection" color="secondary" onClick={deleteAllFilters}>
                 <DeleteSweep />
               </IconButton>
-              <IconButton aria-label="add-filter" color="secondary">
+              <IconButton aria-label="add-filter" color="secondary" onClick={addFilter}>
                 <AddCircleOutlineIcon/>
               </IconButton>
             </Stack>
@@ -133,9 +190,9 @@ function Filters(props) {
         container spacing={{ xs: 2, md: 3 }} columns={{ xs: 4, sm: 8, md: 12 }}
         sx={{px:8, py:20}}
       >
-        {_mockFilters.map((item) => (
-          <Grid item xs={2} sm={4} md={4} key={item.filterId} >
-            <FilterCard {...item}/>
+        {filteredFilters.map((item) => (
+          <Grid item xs={2} sm={4} md={4} key={item.id} >
+            <FilterCard onDeleteBtnClick={deleteOneFilter} onNameChange={updateFilterName} {...item}/>
           </Grid>
         ))};
       </Grid>

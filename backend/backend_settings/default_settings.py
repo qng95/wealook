@@ -1,7 +1,7 @@
 SECRET_KEY = 'django-insecure-zi74$!olem3fisb+%j0!umh#=rcwbyefp48r=6=7i%%0!1&!yl'
 DEBUG = True
 ALLOWED_HOSTS = []
-ROOT_URLCONF = 'backend.urls'
+ROOT_URLCONF = 'backend_settings.urls'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -23,3 +23,6 @@ CORS_ORIGIN_WHITELIST = [
     'http://localhost:8081',
 ]
 STATIC_URL = 'static/'
+
+IPINFO_API_KEY = ""
+OPENWEATHER_API_KEY = "a411d702d383f7a96737f5e72009ad86"

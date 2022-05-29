@@ -1,8 +1,30 @@
-import {API_ROOT} from './configs';
 import axios from 'axios';
+import queryString from 'query-string';
+
+
+const getStoredAuthToken = () => {
+  /*
+  TODO: no auth yet
+   */
+  return "n/a"
+}
+
+
+const removeStoredAuthToken = () => {
+  /*
+  TODO: to be implemented
+   */
+}
+
+export const objectToQueryString = (obj, options = {}) =>
+  queryString.stringify(obj, {
+    arrayFormat: 'bracket',
+    ...options,
+  });
+
 
 const defaults = {
-  baseURL: API_ROOT,
+  baseURL: process.env.API_URL || 'http://localhost:8000/api/v1',
   headers: () => ({
     'Content-Type': 'application/json',
     Authorization: getStoredAuthToken() ? `Bearer ${getStoredAuthToken()}` : undefined,
@@ -15,12 +37,15 @@ const defaults = {
   },
 };
 
-const api = (method, url, variables) =>
+/*
+Return a promise for useEffect
+ */
+const request = (method, url, variables) =>
   new Promise((resolve, reject) => {
     axios({
-      url: `${url}`,
+      url: `${defaults.baseURL}${url}`,
       method,
-      headers: headers(),
+      headers: defaults.headers(),
       params: method === 'get' ? variables : undefined,
       data: method !== 'get' ? variables : undefined,
       paramsSerializer: objectToQueryString,
@@ -32,7 +57,6 @@ const api = (method, url, variables) =>
         if (error.response) {
           if (error.response.data.error.code === 'INVALID_TOKEN') {
             removeStoredAuthToken();
-            history.push('/authenticate');
           } else {
             reject(error.response.data.error);
           }
@@ -42,4 +66,11 @@ const api = (method, url, variables) =>
       },
     );
   });
+
+export default {
+  get: (...args) => request('get', ...args),
+  post: (...args) => request('post', ...args),
+  put: (...args) => request('put', ...args),
+  delete: (...args) => request('delete', ...args),
+};
 

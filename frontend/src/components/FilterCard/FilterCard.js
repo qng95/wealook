@@ -1,15 +1,42 @@
-import React from 'react';
-import {Box, Card, CardActionArea, IconButton, Typography, Avatar, Stack} from "@mui/material";
+import React, {useState} from 'react';
+import {
+  Box,
+  Card,
+  CardActionArea,
+  IconButton,
+  Typography,
+  Avatar,
+  Stack,
+  TextField
+} from "@mui/material";
 import {Delete} from "@mui/icons-material";
 import {Link} from "react-router-dom";
-import StarIcon from '@mui/icons-material/Star';
+import EditIcon from '@mui/icons-material/Edit';
+import CheckIcon from '@mui/icons-material/Check';
+import _ from "lodash";
 
 
 function FilterCard(props) {
-  const {filterId, filterName} = props;
+  const {id, name, onDeleteBtnClick, onNameChange} = props;
+
+  const [isEditingName, setisEditingName] = useState(false);
+  const [editableName, setEditableName] = useState(name);
+
+  const debouncedNameChange = _.debounce(function (event) {
+   const newName = event.target.value;
+   setEditableName(newName);
+  }, 300);
+
+  const toogleEditMode = () => {
+    if (isEditingName) {
+      onNameChange(id, editableName);
+    }
+    setisEditingName(!isEditingName);
+  }
+
   const img_name = Math.floor(Math.random() * 8);
   return (
-    <Card component={Link} to={`/filters/${filterId}`}>
+    <Card>
       <Box 
         sx={{
           border:'2px solid',
@@ -24,21 +51,28 @@ function FilterCard(props) {
           <Avatar variant="square" 
             style={{border: 0, objectFit: 'cover'}} 
             sx={{width:'100%', height: 300}} 
-            src={`/countries_img/${img_name}.jpg`} />
+            src={`/countries_img/${img_name}.jpg`} component={Link} to={`/filters/${id}`} />
           <Stack direction="row">
-            <IconButton aria-label="delete-filter" color="error">
+            <IconButton aria-label="delete-filter" color="error" onClick={onDeleteBtnClick}>
               <Delete />
             </IconButton>
             <CardActionArea sx={{color: 'primary.light', p:2, textAlign: 'center'}} >
-              <Typography>{filterName}</Typography>
+              {
+                isEditingName
+                  ? <TextField id="standard-basic" defaultValue={editableName} variant="standard" onChange={debouncedNameChange}/>
+                  : <Typography>{editableName}</Typography>
+              }
+
             </CardActionArea>
-            <IconButton aria-label="start" color="info">
-              <StarIcon/>
+            <IconButton aria-label="start" color="info" onClick={toogleEditMode}>
+              {
+                isEditingName
+                  ? <CheckIcon/>
+                  : <EditIcon/>
+              }
             </IconButton>
           </Stack>
-          
         </Stack>
-        
       </Box>
     </Card>
   );

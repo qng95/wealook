@@ -2,7 +2,7 @@ import os
 import pandas as pd
 from functools import cache
 import sqlalchemy
-from backend.environment_settings import ENV_CONFIG
+from backend_settings.environment_settings import ENV_CONFIG
 
 # TODO: this script is only helper script for now.
 # TODO: It should be deprecate in the future as we should rely only on migration of Django and preset data should be imported through admin page
