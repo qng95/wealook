@@ -1,0 +1,19 @@
+#select-countries-id {
+    color: #e4f6f9 !important;
+}
+
+#select-countries {
+    color: #e4f6f9 !important;
+}
+
+#select-weather-id {
+    color: #e4f6f9 !important;
+}
+
+#select-weather {
+    color: #e4f6f9 !important;
+}
+
+li.Mui-selected {
+    background-color: #b8f2fa !important;
+}

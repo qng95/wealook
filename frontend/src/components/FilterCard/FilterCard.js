@@ -1,7 +1,9 @@
 import React from 'react';
-import {Box, Card, CardActionArea, IconButton, Typography, Avatar, Stack, div} from "@mui/material";
+import {Box, Card, CardActionArea, IconButton, Typography, Avatar, Stack} from "@mui/material";
 import {Delete} from "@mui/icons-material";
 import {Link} from "react-router-dom";
+import StarIcon from '@mui/icons-material/Star';
+
 
 function FilterCard(props) {
   const {filterId, filterName} = props;
@@ -24,11 +26,14 @@ function FilterCard(props) {
             sx={{width:'100%', height: 300}} 
             src={`/countries_img/${img_name}.jpg`} />
           <Stack direction="row">
+            <IconButton aria-label="delete-filter" color="error">
+              <Delete />
+            </IconButton>
             <CardActionArea sx={{color: 'primary.light', p:2, textAlign: 'center'}} >
               <Typography>{filterName}</Typography>
             </CardActionArea>
-            <IconButton aria-label="delete-filter" color="error">
-              <Delete />
+            <IconButton aria-label="start" color="info">
+              <StarIcon/>
             </IconButton>
           </Stack>
           

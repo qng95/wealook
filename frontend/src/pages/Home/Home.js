@@ -1,16 +1,16 @@
 import React, {useEffect, useState} from 'react';
 import { Link } from 'react-router-dom';
-import {Typography, Autocomplete, Container, IconButton, Stack, Tabs} from "@mui/material";
+import {Typography, Autocomplete, Container, IconButton, Stack, Tabs,Box, AppBar, Toolbar} from "@mui/material";
 import {MyLocation, BurstMode} from "@mui/icons-material";
 import SearchIcon from '@mui/icons-material/Search';
 import InputBase from '@mui/material/InputBase';
-import LocationOnRoundedIcon from '@mui/icons-material/LocationOnRounded';
 
 import WeatherCard from "../../components/WeatherCard/WeatherCard";
 import WeatherHourCard from "../../components/WeatherCard/WeatherHourCard";
 import PageLoader from "../PageLoader/PageLoader";
 import { styled, alpha } from '@mui/material/styles';
 import './Home.css';
+import HomeRoundedIcon from '@mui/icons-material/HomeRounded';
 
 const _mockAllLocationAndRegion = [
   {name: "Frankfurt"},
@@ -18,11 +18,11 @@ const _mockAllLocationAndRegion = [
 ]
 
 const _mockWeatherConditions = [
-  {value: 1, city: 'Frankfurt', date: 'Wed 25', temp: "26", feels_like: "24", humidity: "66", wind_speed: "11", visibility: "10", wcond_id: 201},
-  {value: 2, city: 'Frankfurt', date: 'Thu 26', temp: "26", feels_like: "24", humidity: "66", wind_speed: "11", visibility: "10", wcond_id: 202},
-  {value: 3, city: 'Frankfurt', date: 'Fri 27', temp: "26", feels_like: "24", humidity: "66", wind_speed: "11", visibility: "10", wcond_id: 800},
-  {value: 4, city: 'Frankfurt', date: 'Sat 28', temp: "26", feels_like: "24", humidity: "66", wind_speed: "11", visibility: "10", wcond_id: 300},
-  {value: 5, city: 'Frankfurt', date: 'Sun 29', temp: "26", feels_like: "24", humidity: "66", wind_speed: "11", visibility: "10", wcond_id: 601},
+  {city: 'Frankfurt', date: 'Wed 25', temp: "26", feels_like: "24", humidity: "66", wind_speed: "11", visibility: "10", wcond_id: 201},
+  {city: 'Frankfurt', date: 'Thu 26', temp: "26", feels_like: "24", humidity: "66", wind_speed: "11", visibility: "10", wcond_id: 202},
+  {city: 'Frankfurt', date: 'Fri 27', temp: "26", feels_like: "24", humidity: "66", wind_speed: "11", visibility: "10", wcond_id: 800},
+  {city: 'Frankfurt', date: 'Sat 28', temp: "26", feels_like: "24", humidity: "66", wind_speed: "11", visibility: "10", wcond_id: 300},
+  {city: 'Frankfurt', date: 'Sun 29', temp: "26", feels_like: "24", humidity: "66", wind_speed: "11", visibility: "10", wcond_id: 601},
 ]
 
 const _mockWeatherHourConditions = [
@@ -77,12 +77,12 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 
 function Home(props) {
   const [dataAvailable, setDataAvailable] = useState(false);
-  const [value, setValue] = useState(2);
+  const [selectedValue, setSelectedValue] = useState('Thu 26');
 
-  const handleChange = (event, newValue) => {
-    console.log(event);
-    setValue(newValue);
-  };
+  const onWeatherCardSelected = (event, newValue) => {
+    console.log("Event " + newValue);
+    setSelectedValue(newValue);
+  }
 
   useEffect(() => {
     setDataAvailable(true);
@@ -95,62 +95,74 @@ function Home(props) {
   }
   return (
     <Container sx={{ minWidth: '100%', bgcolor: 'primary.main'}}>
-      <Stack direction="row" justifyContent="left" alignItems="stretch">
-        <Container sx={{ml: 0}} >
-          <Typography sx={{color: 'primary.light', pt: 4, pl:4}} variant="h5">
-            <LocationOnRoundedIcon/> 
-            Frankfurt Am Main
-          </Typography>
-        </Container>
+      <Box sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' }  }}>
+        <AppBar position="fixed">
+          <Toolbar>
+            <IconButton size="large" edge="start" sx={{ml:6}} component={Link} to={'/'} aria-label="my-location" color="secondary" >
+              <HomeRoundedIcon/> 
+            </IconButton>
+            <Typography
+              variant="h6"
+              noWrap
+              component="div"
+              sx={{ color: 'primary.light', flexGrow: 1, display: { xs: 'none', sm: 'block' } }}
+            > 
+              Frankfurt Am Main
+            </Typography>
+            <Stack
+              direction="row"
+              justifyContent="right"
+              alignItems="stretch"
+              sx={{mr:7}}
+            >
         
-        <Stack direction="row" justifyContent="right" alignItems="stretch" sx={{pt:2, pr:8}}>
-          
-          <Autocomplete
-            freeSolo /*value can be any does not have to be in the allLocationAndRegion list*/
-            disableClearable
-            id="locationSearch"
-            options={_mockAllLocationAndRegion.map((option) => option.name)}
-            renderInput={(params) => (
-              <Search>
-              <SearchIconWrapper>
-                <SearchIcon />
-              </SearchIconWrapper>
-              <StyledInputBase
-                {...params}
-                placeholder="Search location"
-                InputProps={{
-                  ...params.InputProps,
-                  type: 'search',
-                }}
+              <Autocomplete
+                freeSolo /*value can be any does not have to be in the allLocationAndRegion list*/
+                disableClearable
+                id="locationSearch"
+                options={_mockAllLocationAndRegion.map((option) => option.name)}
+                renderInput={(params) => (
+                  <Search>
+                    <SearchIconWrapper>
+                      <SearchIcon />
+                    </SearchIconWrapper>
+                    <StyledInputBase
+                      {...params}
+                      placeholder="Search locations"
+                      InputProps={{
+                        ...params.InputProps,
+                        type: 'search',
+                      }}
+                    />
+                  </Search>
+                )}
               />
-            </Search>
-
-            )}
-            
-          />
-          <IconButton aria-label="my-location" color="secondary">
-            <MyLocation />
-          </IconButton>
-          <IconButton 
-          component={Link} to={'/filters'} 
-          aria-label="filter-collection" 
-          color="secondary"
-          >
-            <BurstMode />
-          </IconButton>
-        </Stack>
-      </Stack>
-
+              <IconButton aria-label="my-location" color="secondary">
+                <MyLocation />
+              </IconButton>
+              <IconButton 
+                component={Link} to={'/filters'} 
+                aria-label="filter-collection" 
+                color="secondary"
+              >
+              <BurstMode />
+              </IconButton>
+              </Stack>
+          </Toolbar>
+        </AppBar>
+      </Box>
+      
       <Tabs 
         variant="scrollable"
-        sx={{px:3, py:2}}
+        sx={{px:3, pt:20, pb:5}}
         scrollButtons={true}
-        value={value}
-        onChange={handleChange}
+        value={selectedValue}
         indicatorColor="primary"
       >
         {_mockWeatherConditions.map((item) => (
-            <WeatherCard key={item.date} {...item}/>  
+            (selectedValue === item.date) 
+            ? <WeatherCard value={item.date} onClick={onWeatherCardSelected} key={item.date} bgcolor={'secondary.main'} txtcolor={'primary.main'} {...item}/>
+            : <WeatherCard value={item.date} onClick={onWeatherCardSelected} key={item.date} bgcolor={'third.dark'} txtcolor={'primary.light'} {...item}/>  
         ))}
       </Tabs>
       <Stack
@@ -162,7 +174,7 @@ function Home(props) {
         
         >
         {_mockWeatherHourConditions.map((item) => (
-            <WeatherHourCard key={item.hour} {...item}/>
+          <WeatherHourCard key={item.hour} {...item}/>
         ))}
       </Stack>
       

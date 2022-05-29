@@ -4,7 +4,8 @@ import {
   Container,
   Grid,
   IconButton,
-  Stack
+  Stack,
+AppBar, Box, Toolbar, Typography
 } from "@mui/material";
 import {DeleteSweep, Home} from "@mui/icons-material";
 import {Link} from "react-router-dom";
@@ -75,57 +76,62 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 function Filters(props) {
   return (
     <Container sx={{ minWidth: '100%', bgcolor: 'primary.main'}}>
-      <Stack 
-        direction="row"
-        justifyContent="right"
-        alignItems="stretch">
-        <Container sx={{minWith: '70%'}} >
-          <IconButton sx={{pt: 4, pl:4}} component={Link} to={'/'} aria-label="my-location" color="secondary" >
-            <Home fontSize="large"/>
-          </IconButton>
-        </Container>
-        <Container >
-          <Stack
-            direction="row"
-            justifyContent="right"
-            alignItems="stretch"
-            sx={{pt:2, pr:4}}
-          >
+      <Box sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' }  }}>
+        <AppBar position="fixed">
+          <Toolbar>
+            <IconButton size="large" edge="start" sx={{ml:6}} component={Link} to={'/'} aria-label="my-location" color="secondary" >
+              <Home/>
+            </IconButton>
+            <Typography
+              variant="h6"
+              noWrap
+              component="div"
+              sx={{ color: 'primary.light', flexGrow: 1, display: { xs: 'none', sm: 'block' } }}
+            > 
+              Frankfurt Am Main
+            </Typography>
+            <Stack
+              direction="row"
+              justifyContent="right"
+              alignItems="stretch"
+              sx={{mr:7}}
+            >
         
-            <Autocomplete
-              freeSolo /*value can be any does not have to be in the allLocationAndRegion list*/
-              disableClearable
-              id="locationSearch"
-              options={_mockAllLocationAndRegion.map((option) => option.name)}
-              renderInput={(params) => (
-                <Search>
-                  <SearchIconWrapper>
-                    <SearchIcon />
-                  </SearchIconWrapper>
-                  <StyledInputBase
-                    {...params}
-                    placeholder="Search filters"
-                    InputProps={{
-                      ...params.InputProps,
-                      type: 'search',
-                    }}
-                  />
-                </Search>
-              )}
-            />
-            <IconButton aria-label="filter-collection" color="secondary">
-              <DeleteSweep />
-            </IconButton>
-            <IconButton aria-label="add-filter" color="secondary">
-              <AddCircleOutlineIcon/>
-            </IconButton>
-          </Stack>
-        </Container>
-      </Stack>
+              <Autocomplete
+                freeSolo /*value can be any does not have to be in the allLocationAndRegion list*/
+                disableClearable
+                id="locationSearch"
+                options={_mockAllLocationAndRegion.map((option) => option.name)}
+                renderInput={(params) => (
+                  <Search>
+                    <SearchIconWrapper>
+                      <SearchIcon />
+                    </SearchIconWrapper>
+                    <StyledInputBase
+                      {...params}
+                      placeholder="Search filters"
+                      InputProps={{
+                        ...params.InputProps,
+                        type: 'search',
+                      }}
+                    />
+                  </Search>
+                )}
+              />
+              <IconButton aria-label="filter-collection" color="secondary">
+                <DeleteSweep />
+              </IconButton>
+              <IconButton aria-label="add-filter" color="secondary">
+                <AddCircleOutlineIcon/>
+              </IconButton>
+            </Stack>
+          </Toolbar>
+        </AppBar>
+      </Box>
       
       <Grid 
         container spacing={{ xs: 2, md: 3 }} columns={{ xs: 4, sm: 8, md: 12 }}
-        sx={{px:8, py:2}}
+        sx={{px:8, py:20}}
       >
         {_mockFilters.map((item) => (
           <Grid item xs={2} sm={4} md={4} key={item.filterId} >
