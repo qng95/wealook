@@ -15,20 +15,23 @@ class _WeatherService:
     def __init__(self):
         self.model = Weather
 
+    def _getToday(self):
+        return datetime.today()
+
     def _getDateRange(self):
-        from_date = datetime.today()
-        to_date = from_date + timedelta(days=self.FORECAST_RANGE)
-        return from_date, to_date
+        from_date = self._getToday()
+        date_range = [(from_date + timedelta(days=day)) for day in range(0, self.FORECAST_RANGE + 1)]
+        return date_range
 
     def _getMidday(self, date):
         midday = date.replace(hour=12, minute=0, second=0, microsecond=0)
         return midday
 
     def _getTodayMidday(self):
-        return self._getMidday(datetime.today())
+        return self._getMidday(self._getToday())
 
     def _getForecastMidday(self):
-        today = datetime.today()
+        today = self._getToday()
         forecast_midday = [today]
         for day in range(1, self.FORECAST_RANGE + 1):
             forecast_midday.append(today + timedelta(days=day))
@@ -44,16 +47,16 @@ class _WeatherService:
         )
 
     def getTodayForecastForCity(self, location_id):
-        from_date, _ = self._getDateRange()
+        today = self._getToday()
         return self.model.objects.filter(
-            Q(rdate__exact=from_date),
+            Q(rdate__exact=today),
             Q(location_id__exact=location_id)
         )
 
     def getForecastForCity(self, location_id): # 5 days - 3 hour forecast for single city
-        from_date, to_date = self._getDateRange()
+        date_rage = self._getDateRange()
         return self.model.objects.filter(
-            Q(rdate__in=(from_date, to_date)),
+            Q(rdate__in=date_rage),
             Q(location_id__exact=location_id)
         )
 
@@ -74,9 +77,9 @@ class _WeatherService:
         )
 
     def getTodayForecastForCities(self, location_ids): # today - 3 hour forecast for all specified cities
-        from_date, _ = self._getDateRange()
+        today = self._getToday()
         return self.model.objects.filter(
-            Q(rdate__exact=from_date),
+            Q(rdate__exact=today),
             Q(location_id__in=location_ids)
         )
 
@@ -89,9 +92,9 @@ class _WeatherService:
         )
 
     def getForecastForCities(self, location_ids): # 5 day - 3 hour forecasts for all specified cities
-        from_date, to_date = self._getDateRange()
+        date_range = self._getDateRange()
         return self.model.objects.filter(
-            Q(rdate__in=(from_date, to_date)),
+            Q(rdate__in=date_range),
             Q(location_id__in=location_ids)
         )
 

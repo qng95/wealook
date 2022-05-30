@@ -16,6 +16,16 @@ class _LocationService:
     def getAllCities(self):
         return self.model.objects.all()
 
+    def getCitiesStartsWith(self, query):
+        return self.model.objects.filter(
+            Q(city_ascii__startswith=query)
+        )
+
+    def getCityById(self, id):
+        return self.model.objects.get(
+            Q(id__exact=id)
+        )
+
     def getCitiesByCountryIso3(self, country_iso3):
         return self.model.objects.filter(
             Q(iso3__iexact=country_iso3)  # case-insensitive

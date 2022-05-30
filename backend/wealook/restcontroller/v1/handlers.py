@@ -24,11 +24,23 @@ def user_pref(request, userid):
     """
     if request.method == "GET":
         userpref = UserPrefService.getUserPreference(user_id=userid)
-        userpref_serializer = UserPrefSerializer(userpref, many=False)
+        homeLocationId = userpref.home_location_id
+        if not homeLocationId:
+            user_ip = _get_client_ip(request)
+            usercity = LocationService.getUserCityByIp(user_ip)
+            homeLocationId = usercity.id
+            UserPrefService.updateUserPreference(data = {
+                'user_id': userid,
+                'home_location_id': homeLocationId
+            })
+        else:
+            usercity = LocationService.getCityById(homeLocationId)
+
+        usercity_serializer = LocationSerializer(usercity, many=False)
         res = {
             'result': status.HTTP_200_OK,
             'message': 'successful',
-            'data': userpref_serializer.data
+            'data': usercity_serializer.data
         }
         return JsonResponse(res, safe=False, status=status.HTTP_200_OK)
 
@@ -133,13 +145,19 @@ def filter_details(request, userid, filterid):
 
 @api_view(['GET'])
 def cities(request):
-    cities = LocationService.getAllCities()
-    cities_serializer = LocationSerializer(cities, many=True)
+    query_params = request.query_params
+    city_query = query_params.get('q')
+    if not city_query:
+        cities = LocationService.getAllCities()
+    else:
+        cities = LocationService.getCitiesStartsWith(city_query)
+
+    citiesNameWithId = [{'name': city.city_ascii, 'id': city.id} for city in cities]
     res = {
         'result': status.HTTP_200_OK,
         'message': 'successful',
         'data': {
-            'cities': cities_serializer.data
+            'cities': citiesNameWithId
         }}
     return JsonResponse(res, safe=False, status=status.HTTP_200_OK)
 

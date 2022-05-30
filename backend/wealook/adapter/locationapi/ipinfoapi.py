@@ -27,7 +27,7 @@ class _IpInfoIO:
     def get_ip_city(self, ip):
         details = self._getIpDetails(ip)
         if not hasattr(details, 'city'): # TODO: proper mock
-            return 'Frankfurt am Main'
+            return 'Tokyo'
         return details.city
 
     # ISO2

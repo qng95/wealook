@@ -19,7 +19,7 @@ import PageLoader from "../PageLoader/PageLoader";
 import api from "../../api";
 import _ from 'lodash';
 
-const _mockFilters = [
+/*const _mockFilters = [
   {filterId: 'id1', filterName: 'NewYork Cities'},
   {filterId: 'id2', filterName: 'Singapore Cities'},
   {filterId: 'id3', filterName: 'Brazil Cities'},
@@ -28,7 +28,7 @@ const _mockFilters = [
   {filterId: 'id2', filterName: 'Singapore Cities'},
   {filterId: 'id3', filterName: 'Brazil Cities'},
   {filterId: 'id4', filterName: 'London Cities'},
-]
+]*/
 
 const Search = styled('div')(({ theme }) => ({
   position: 'relative',
