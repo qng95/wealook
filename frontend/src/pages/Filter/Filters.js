@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {useNavigate, Link} from "react-router-dom";
+import {useNavigate, Link, useLocation} from "react-router-dom";
 import {
   Autocomplete,
   Container,
@@ -18,17 +18,6 @@ import {testuser} from "../../stores/store";
 import PageLoader from "../PageLoader/PageLoader";
 import api from "../../api";
 import _ from 'lodash';
-
-/*const _mockFilters = [
-  {filterId: 'id1', filterName: 'NewYork Cities'},
-  {filterId: 'id2', filterName: 'Singapore Cities'},
-  {filterId: 'id3', filterName: 'Brazil Cities'},
-  {filterId: 'id4', filterName: 'London Cities'},
-  {filterId: 'id1', filterName: 'NewYork Cities'},
-  {filterId: 'id2', filterName: 'Singapore Cities'},
-  {filterId: 'id3', filterName: 'Brazil Cities'},
-  {filterId: 'id4', filterName: 'London Cities'},
-]*/
 
 const Search = styled('div')(({ theme }) => ({
   position: 'relative',
@@ -73,7 +62,9 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 }));
 
 function Filters(props) {
+  const location = useLocation();
   const navigate = useNavigate();
+
   const [initFilters, setInitFilters] = useState(false)
   const [filters, setFilters] = useState(null)
   const [filteredFilters, setFilteredFilters] = useState(null);
@@ -143,8 +134,8 @@ function Filters(props) {
               noWrap
               component="div"
               sx={{ color: 'primary.light', flexGrow: 1, display: { xs: 'none', sm: 'block' } }}
-            > 
-              Frankfurt Am Main
+            >
+              {location.state.name}
             </Typography>
             <Stack
               direction="row"

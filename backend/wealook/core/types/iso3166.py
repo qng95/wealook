@@ -1,11 +1,13 @@
 import os
 from csv import DictReader
-from functools import cache
 from .Country import Country
 
 __all__ = [
     'get_all_countries',
+    'get_all_regions',
     'get_region_countries',
+    'get_multiregion_countries',
+    'get_countries_iso3'
 ]
 
 
@@ -43,6 +45,9 @@ class _Iso3166WithRegions:
     def getAllCountries(self):
         return self.countries
 
+    def getAllRegions(self):
+        return self.regions
+
     def getCountriesOfRegion(self, region):
         if region in self.region_with_countries:
             return self.region_with_countries[region]
@@ -55,6 +60,10 @@ _IMPL = _Iso3166WithRegions()
 
 def get_all_countries():
     return _IMPL.getAllCountries()
+
+
+def get_all_regions():
+    return _IMPL.getAllRegions()
 
 
 def get_region_countries(region):

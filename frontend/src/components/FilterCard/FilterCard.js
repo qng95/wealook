@@ -10,7 +10,7 @@ import {
   TextField
 } from "@mui/material";
 import {Delete} from "@mui/icons-material";
-import {Link} from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";
 import EditIcon from '@mui/icons-material/Edit';
 import CheckIcon from '@mui/icons-material/Check';
 import _ from "lodash";
@@ -18,6 +18,10 @@ import _ from "lodash";
 
 function FilterCard(props) {
   const {id, name, onDeleteBtnClick, onNameChange} = props;
+  const navigate = useNavigate();
+  const toFilterPage = () => {
+    navigate(`/filters/${id}`, {state:{id: id, name: name}})
+  }
 
   const [isEditingName, setisEditingName] = useState(false);
   const [editableName, setEditableName] = useState(name);
@@ -32,6 +36,10 @@ function FilterCard(props) {
       onNameChange(id, editableName);
     }
     setisEditingName(!isEditingName);
+  }
+
+  const deleteBtnClick = () => {
+    onDeleteBtnClick(id)
   }
 
   const img_name = Math.floor(Math.random() * 8);
@@ -51,9 +59,9 @@ function FilterCard(props) {
           <Avatar variant="square" 
             style={{border: 0, objectFit: 'cover'}} 
             sx={{width:'100%', height: 300}} 
-            src={`/countries_img/${img_name}.jpg`} component={Link} to={`/filters/${id}`} />
+            src={`/countries_img/${img_name}.jpg`} onClick={toFilterPage} />
           <Stack direction="row">
-            <IconButton aria-label="delete-filter" color="error" onClick={onDeleteBtnClick}>
+            <IconButton aria-label="delete-filter" color="error" onClick={deleteBtnClick}>
               <Delete />
             </IconButton>
             <CardActionArea sx={{color: 'primary.light', p:2, textAlign: 'center'}} >

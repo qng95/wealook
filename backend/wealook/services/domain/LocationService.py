@@ -116,5 +116,10 @@ class _LocationService:
     def getMultiRegionCountries(self, regions):
         return iso3166.get_multiregion_countries(regions)
 
+    def getAllRegions(self):
+        return iso3166.get_all_regions()
+
+    def getAllCountries(self):
+        return iso3166.get_all_countries()
 
 LocationService = _LocationService()

@@ -177,26 +177,28 @@ def mycities(request):
 
 @api_view(['GET'])
 def regions(request):
-    cities = LocationService.getAllCities()
-    cities_serializer = LocationSerializer(cities, many=True)
+    regions = [item for item in LocationService.getAllRegions()]
     res = {
         'result': status.HTTP_200_OK,
         'message': 'successful',
         'data': {
-            'cities': cities_serializer.data
+            'regions': regions
         }}
     return JsonResponse(res, safe=False, status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])
 def countries(request):
-    cities = LocationService.getAllCities()
-    cities_serializer = LocationSerializer(cities, many=True)
+    countries = LocationService.getAllCountries()
+    sortened = [{
+        'name': country.name,
+        'iso3': country.iso3
+    } for country in countries]
     res = {
         'result': status.HTTP_200_OK,
         'message': 'successful',
         'data': {
-            'cities': cities_serializer.data
+            'countries': sortened
         }}
     return JsonResponse(res, safe=False, status=status.HTTP_200_OK)
 
@@ -234,20 +236,35 @@ def weather_single_location(request, locationid):
 
 
 @api_view(['GET'])
-def weather_multiple_location(request, filterid):
+def weather_by_filter(request, filterid):
     query_params = request.query_params
     mode = query_params.get('mode')
     if not mode:
         mode = 'N/A'
 
     filtered_weather = WeatherFilterService.getCitiesWeatherByFilter(filter_id=filterid, mode=mode)
-    if not filtered_weather:
-        res = {
-            'result': status.HTTP_400_BAD_REQUEST,
-            'message': 'invalid query params',
-        }
-        return JsonResponse(res, safe=False, status=status.HTTP_400_BAD_REQUEST)
+    weather_serializer = WeatherSerializer(filtered_weather, many=True)
+    res = {
+        'result': status.HTTP_200_OK,
+        'message': 'successful',
+        'data': {
+            'weather': weather_serializer.data
+        }}
+    return JsonResponse(res, safe=False, status=status.HTTP_200_OK)
 
+
+@api_view(['GET'])
+def weather_by_countries(request):
+    query_params = request.query_params
+    countries = query_params.get('countries')
+    if not countries:
+        countries = ''
+    countries = [country.strip() for country in countries.split(",")]
+    cities = []
+    for country in countries:
+        cities += LocationService.getCitiesByCountryName(country)
+    cities = [city.id for city in cities]
+    filtered_weather = WeatherService.getTodayMiddayForCities(cities)
     weather_serializer = WeatherSerializer(filtered_weather, many=True)
     res = {
         'result': status.HTTP_200_OK,

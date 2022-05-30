@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import { Link } from 'react-router-dom';
+import {Link, useNavigate} from 'react-router-dom';
 
 import {
   Typography,
@@ -27,23 +27,6 @@ import {testuser} from "../../stores/store";
 
 import './Home.css';
 import _ from "lodash";
-
-
-const _mockWeatherConditions = [
-  {date: 'Wed 25', temp: "26", feels_like: "24", humidity: "66", wind_speed: "11", visibility: "10", wcond_id: 201},
-  {date: 'Thu 26', temp: "26", feels_like: "24", humidity: "66", wind_speed: "11", visibility: "10", wcond_id: 202},
-  {date: 'Fri 27', temp: "26", feels_like: "24", humidity: "66", wind_speed: "11", visibility: "10", wcond_id: 800},
-  {date: 'Sat 28', temp: "26", feels_like: "24", humidity: "66", wind_speed: "11", visibility: "10", wcond_id: 300},
-  {date: 'Sun 29', temp: "26", feels_like: "24", humidity: "66", wind_speed: "11", visibility: "10", wcond_id: 601},
-]
-
-const _mockWeatherHourConditions = [
-  {hour:"9:00", temp: "26", feels_like: "24", humidity: "66", wind_speed: "11", visibility: "10", wcond_id: 201},
-  {hour:"12:00", temp: "26", feels_like: "24", humidity: "66", wind_speed: "11", visibility: "10", wcond_id: 201},
-  {hour:"4:00", temp: "26", feels_like: "24", humidity: "66", wind_speed: "11", visibility: "10", wcond_id: 201},
-  {hour:"7:00", temp: "26", feels_like: "24", humidity: "66", wind_speed: "11", visibility: "10", wcond_id: 201},
-  {hour:"11:00", temp: "26", feels_like: "24", humidity: "66", wind_speed: "11", visibility: "10", wcond_id: 201}
-]
 
 const Search = styled('div')(({ theme }) => ({
   position: 'relative',
@@ -88,6 +71,11 @@ const StyledInputBase = styled(TextField)(({ theme }) => ({
 }));
 
 function Home(props) {
+  const navigate = useNavigate();
+  const toFiltersPage = () => {
+    navigate('/filters', {state:selectedCity})
+  }
+
   const [dataAvailable, setDataAvailable] = useState(null);
 
   const [initCities, setInitCities] = useState(false);
@@ -272,7 +260,7 @@ function Home(props) {
                 <MyLocation />
               </IconButton>
               <IconButton 
-                component={Link} to={'/filters'} 
+                onClick={toFiltersPage}
                 aria-label="filter-collection" 
                 color="secondary"
               >

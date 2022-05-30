@@ -1,18 +1,17 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   Autocomplete,
   Container,
   IconButton,
   Stack,
-  AppBar, Box, Toolbar, Typography, Drawer, Grid
+  AppBar, Box, Toolbar, Typography, Drawer, Grid, TextField
 } from "@mui/material";
-import {useParams} from "react-router-dom";
+import {useLocation, useParams} from "react-router-dom";
 import { styled, alpha } from '@mui/material/styles';
 import Home from "@mui/icons-material/Home";
 import SearchIcon from '@mui/icons-material/Search';
 import SaveAltOutlined from '@mui/icons-material/SaveAltOutlined';
 import {Link} from "react-router-dom";
-import InputBase from '@mui/material/InputBase';
 
 import ThermostatIcon from '@mui/icons-material/Thermostat';
 import List from '@mui/material/List';
@@ -28,19 +27,18 @@ import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
 import { useTheme } from '@mui/material/styles';
 import CityCard from "../../components/CityCard/CityCard";
-import StarIcon from '@mui/icons-material/Star';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 
 import './Filter.css'
+import {testuser} from "../../stores/store";
+import api from "../../api";
+import PageLoader from "../PageLoader/PageLoader";
+import _ from "lodash";
+import {getWeatherConditionByCode} from "../../utils/openweather";
 
 const drawerWidth = 300;
-const _mockAllLocationAndRegion = [
-  {name: "Frankfurt"},
-  {name: "Kakao"},
-]
 
 const _mock_CountryNames = [
- 'All',
  'London',
  'Germany',
  'America',
@@ -51,13 +49,11 @@ const _mock_CountryNames = [
  'France'
 ];
 
-const _mock_WeatherNames = [
-  'All',
-  'Sunny',
-  'Cloudy',
-  'Rainny',
-  'Stommy',
-  'Snowy'
+const weatherNames = [
+  'Clear',
+  'Clouds',
+  'Rain',
+  'Snow'
 ];
 
 const _mockCities = [
@@ -107,18 +103,18 @@ const SearchIconWrapper = styled('div')(({ theme }) => ({
   justifyContent: 'center',
 }));
 
-const StyledInputBase = styled(InputBase)(({ theme }) => ({
+const StyledInputBase = styled(TextField)(({ theme }) => ({
   color: 'inherit',
   '& .MuiInputBase-input': {
     padding: theme.spacing(1, 1, 1, 0),
     // vertical padding + font size from searchIcon
-    paddingLeft: `calc(1em + ${theme.spacing(4)})`,
+    paddingLeft: `calc(1em + ${theme.spacing(4)})!important`,
     transition: theme.transitions.create('width'),
     width: '100%',
     [theme.breakpoints.up('xs')]: {
-      width: '20ch',
+      width: '20ch!important',
       '&:focus': {
-        width: '20ch',
+        width: '20ch!important',
       },
     },
   },
@@ -134,141 +130,173 @@ function getStyles(country, countries, theme) {
 }
 
 function Filter(props) {
+  const location = useLocation();
 
   const theme = useTheme();
-  const routeParams = useParams();
-  const [filterParams, setFilterParams] = useState({
-    regions: [],
-    additionalCities: [],
-  })
-  const [filteredCitiesWeather, setFilteredCitiesWeather] = useState([]);
+  const { filterId } = useParams();
+
+  const [initialized, setInitialized] = useState(false);
+
+  const [initFilter, setInitFilter] = useState(false);
+  const [filterParams, setFilterParams] = useState(null);
+
+  const [initFilteredCitiesWeather, setInitFilteredCitiesWeather] = useState(false);
+  const [filteredCitiesWeather, setFilteredCitiesWeather] = useState(null);
+  const [tempCitiesWeather, setTempCitiesWeather] = useState(null);
+
+  const [initLocationData, setInitLocationData] = useState(false);
+  const [countries, setCountries] = React.useState([]);
+  const [regions, setRegions] = React.useState([]);
+  const [cities, setCities] = React.useState([]);
+
+  const [selectedCountries, setSelectedCountries] = React.useState([]);
+  const [tempTo, setTempTo] = useState(70);
+  const [tempFrom, setTempFrom] = useState(-70);
+  const [selectedWeather, setSelectedWeather] = useState([]);
+
+
+  const fetchFilter = async () => {
+    const result = await api.get(`/filters/${testuser.id}/${filterId}`)
+    const filterdata = result.data;
+    setFilterParams(filterdata);
+    setTempTo(filterdata.temp_to);
+    setTempFrom(filterdata.temp_from);
+    setInitFilter(true);
+  }
+
+  useEffect(() => {
+    if (!initFilter) {
+      fetchFilter();
+    }
+  }, [])
+
+  const updateFilter = async () => {
+    const result = await api.put(`/filters/${testuser.id}/${filterId}`, {
+      id: filterParams.id,
+      user_id: filterParams.id,
+    })
+  }
+
+  const fetchWeatherDataForCities = async () => {
+    const result = await api.get(`/weather/m`, {
+      countries: selectedCountries
+    })
+    const weatherdata = result.data.weather;
+    setFilteredCitiesWeather(weatherdata);
+    setTempCitiesWeather(weatherdata);
+  }
+
+  useEffect(() => {
+    if (initialized) {
+      fetchWeatherDataForCities();
+    }
+  }, [selectedCountries])
+
+  useEffect(() => {
+    if (initialized) {
+      const filteredWeather = filteredCitiesWeather.filter(item => {
+        const temp = Math.trunc(item.temp - 273.15);
+        const weather_cond_id = item.weather_cond_id;
+        if (temp < tempFrom || temp > tempTo) {
+          return false;
+        }
+
+        const weatherCondition = getWeatherConditionByCode(weather_cond_id);
+        return weatherCondition in selectedWeather;
+      });
+      setTempCitiesWeather(filteredWeather);
+    }
+  }, [tempTo, tempFrom, selectedWeather])
+
+  const fetchFilteredCitiesWeather = async () => {
+    const result = await api.get(`/weather/f/${filterId}`, {
+      mode: 'today_mid'
+    });
+    const weatherdata = result.data.weather;
+    setFilteredCitiesWeather(weatherdata);
+    setTempCitiesWeather(weatherdata);
+    setInitFilteredCitiesWeather(true);
+  }
+
+  useEffect(() => {
+    if (!initFilteredCitiesWeather) {
+      fetchFilteredCitiesWeather();
+    }
+  }, [])
+
+  const fetchCities = async (query) => {
+    const result = await api.get("/cities", {
+      q: query
+    })
+    setCities(result.data.cities);
+  };
+
+  const debouncedSearchChange = _.debounce(function (event) {
+    const searchval = event.target.value;
+    fetchCities(searchval);
+  }, 300);
+
+  const onSearchValSelected = (event, value) => {
+    // TODO: update search param and request again
+  }
+
+  const fetchCountriesAndRegions = async () => {
+    const _cresult = await api.get("/countries")
+    const _rresult = await api.get("/regions")
+
+    const countriesdata = _cresult.data.countries
+    const regionsdata = _rresult.data.regions
+
+    setCountries(countriesdata);
+    setRegions(regionsdata);
+    setInitLocationData(true);
+  };
+
+  useEffect(() => {
+    if (!initLocationData) {
+      fetchCountriesAndRegions();
+    }
+  });
+
+  useEffect(() => {
+    setInitialized(initFilter && initLocationData && initFilteredCitiesWeather);
+  }, [initFilter, initLocationData, initFilteredCitiesWeather]);
 
   function valuetext(value) {
     return `${value}°C`;
   }
 
-  const [countries, setContries] = React.useState([]);
-
   const handleChangeCountries = (event) => {
     const {
       target: { value },
     } = event;
-    setContries(
+    setSelectedCountries(
       // On autofill we get a stringified value.
       typeof value === 'string' ? value.split(',') : value,
     );
   };
-
-  const [weather, setWeather] = React.useState([]);
 
   const handleChangeWeather = (event) => {
     const {
       target: { value },
     } = event;
-    setWeather(
+    setSelectedWeather(
       // On autofill we get a stringified value.
       typeof value === 'string' ? value.split(',') : value,
     );
   };
 
-  
+  const handleTempToChange = (event, value) => {
+    setTempTo(value);
+  }
 
-  const filterbox = (
-    
-      <List sx={{color: 'primary.light'}}>
-        <ListItem>
-        <ListItemIcon sx={{color: 'primary.light'}}> <LocationOnIcon/> </ListItemIcon>
-          <FormControl sx={{ width: '90%'}} size="large">
-            <InputLabel id="select-countries">Countries</InputLabel>
-            <Select
-              labelId="select-countries"
-              id="select-countries-id"
-              value={countries}
-              label="countries"
-              onChange={handleChangeCountries}
-              multiple
-              MenuProps={MenuProps}
-            >
-              {_mock_CountryNames.map((name) => (
-                <MenuItem
-                  key={name}
-                  value={name}
-                  style={getStyles(name, countries, theme)}
-                >
-                  {name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </ListItem>
-        <ListItem>
-          <ListItemIcon sx={{color: 'primary.light'}}> <ThermostatIcon/> </ListItemIcon>
-          <ListItemText> Temp to: </ListItemText>
-          
-        </ListItem>
-        <ListItem>
-          <Box sx={{ ml:7, width: '90%' }}>
-            <Slider
-              aria-label="Temperature"
-              defaultValue={30}
-              getAriaValueText={valuetext}
-              valueLabelDisplay="auto"
-              step={10}
-              marks
-              min={10}
-              max={110}
-              color="secondary"
-            />
-          </Box>
-        </ListItem>
-        <ListItem>
-          <ListItemIcon sx={{color: 'primary.light'}}> <ThermostatIcon/> </ListItemIcon>
-          <ListItemText> Temp from: </ListItemText>
-        </ListItem>
-        <ListItem>
-          <Box sx={{ ml:7, width: '90%' }}>
-            <Slider
-              aria-label="Temperature"
-              defaultValue={30}
-              getAriaValueText={valuetext}
-              valueLabelDisplay="auto"
-              step={10}
-              marks
-              min={10}
-              max={110}
-              color="secondary"
-            />
-          </Box>
-        </ListItem>
-        <ListItem>
-          <ListItemIcon sx={{color: 'primary.light'}}> <WbSunnyIcon/> </ListItemIcon>
-          <FormControl sx={{ width: '90%'}} size="large">
-            <InputLabel id="select-weather">Weather</InputLabel>
-              <Select
-                labelId="select-weather"
-                id="select-weather-id"
-                value={weather}
-                label="weather"
-                onChange={handleChangeWeather}
-                multiple
-                MenuProps={MenuProps}
-              >
-                {_mock_WeatherNames.map((name) => (
-                  <MenuItem
-                    key={name}
-                    value={name}
-                    style={getStyles(name, weather, theme)}
-                  >
-                    {name}
-                  </MenuItem>
-                ))}
-              </Select>
-          </FormControl>
-        </ListItem>
-      </List>
-    
-  );
+  const handleTempFromChange = (event, value) => {
+    setTempFrom(value);
+  }
 
+  if (!initialized) {
+    return <PageLoader/>
+  }
   return (
     <Container sx={{ minWidth: '100%', bgcolor: 'primary.main'}}>
       <Stack direction="column" justifyContent="center" alignItems="strech">
@@ -283,8 +311,8 @@ function Filter(props) {
                 noWrap
                 component="div"
                 sx={{ color: 'primary.light', flexGrow: 1, display: { xs: 'none', sm: 'block' } }}
-              > 
-                Frankfurt Am Main
+              >
+                {location.state.name}
               </Typography>
               <Stack
                 direction="row"
@@ -296,7 +324,9 @@ function Filter(props) {
                   freeSolo /*value can be any does not have to be in the allLocationAndRegion list*/
                   disableClearable
                   id="locationSearch"
-                  options={_mockAllLocationAndRegion.map((option) => option.name)}
+                  options={cities}
+                  getOptionLabel={(option) => option.name}
+                  onChange={onSearchValSelected}
                   renderInput={(params) => (
                     <Search>
                       <SearchIconWrapper>
@@ -305,6 +335,7 @@ function Filter(props) {
                       <StyledInputBase
                         {...params}
                         placeholder="Search cities"
+                        onChange={debouncedSearchChange}
                         InputProps={{
                           ...params.InputProps,
                           type: 'search',
@@ -343,7 +374,98 @@ function Filter(props) {
               }}
               open
             >
-              {filterbox}
+              <List sx={{color: 'primary.light'}}>
+                <ListItem>
+                  <ListItemIcon sx={{color: 'primary.light'}}> <LocationOnIcon/> </ListItemIcon>
+                  <FormControl sx={{ width: '90%'}} size="large">
+                    <InputLabel id="select-countries">Countries</InputLabel>
+                    <Select
+                      labelId="select-countries"
+                      id="select-countries-id"
+                      value={selectedCountries}
+                      label="Countries"
+                      onChange={handleChangeCountries}
+                      MenuProps={MenuProps}
+                      multiple
+                    >
+                      {countries.map((country) => (
+                        <MenuItem
+                          key={country.name}
+                          value={country.name}
+                          style={getStyles(country.name, selectedCountries, theme)}
+                        >
+                          {country.name}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </ListItem>
+                <ListItem>
+                  <ListItemIcon sx={{color: 'primary.light'}}> <ThermostatIcon/> </ListItemIcon>
+                  <ListItemText> Temp from °C: </ListItemText>
+                </ListItem>
+                <ListItem>
+                  <Box sx={{ ml:7, width: '90%' }}>
+                    <Slider
+                      aria-label="Temperature"
+                      defaultValue={tempFrom}
+                      getAriaValueText={valuetext}
+                      valueLabelDisplay="auto"
+                      step={10}
+                      marks
+                      min={-70}
+                      max={70}
+                      color="secondary"
+                      onChange={handleTempFromChange}
+                    />
+                  </Box>
+                </ListItem>
+                <ListItem>
+                  <ListItemIcon sx={{color: 'primary.light'}}> <ThermostatIcon/> </ListItemIcon>
+                  <ListItemText> Temp to °C: </ListItemText>
+                </ListItem>
+                <ListItem>
+                  <Box sx={{ ml:7, width: '90%' }}>
+                    <Slider
+                      aria-label="Temperature"
+                      defaultValue={tempTo}
+                      getAriaValueText={valuetext}
+                      valueLabelDisplay="auto"
+                      step={10}
+                      marks
+                      min={-70}
+                      max={70}
+                      color="secondary"
+                      onChange={handleTempToChange}
+                    />
+                  </Box>
+                </ListItem>
+                <ListItem>
+                  <ListItemIcon sx={{color: 'primary.light'}}> <WbSunnyIcon/> </ListItemIcon>
+                  <FormControl sx={{ width: '90%'}} size="large">
+                    <InputLabel id="select-weather">Weather</InputLabel>
+                    <Select
+                      labelId="select-weather"
+                      id="select-weather-id"
+                      value={selectedWeather}
+                      label="weather"
+                      onChange={handleChangeWeather}
+                      multiple
+                      MenuProps={MenuProps}
+                    >
+                      {weatherNames.map((name) => (
+                        <MenuItem
+                          key={name}
+                          value={name}
+                          style={getStyles(name, selectedWeather, theme)}
+                        >
+                          {name}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </ListItem>
+              </List>
             </Drawer>
           </Box>
           <Box

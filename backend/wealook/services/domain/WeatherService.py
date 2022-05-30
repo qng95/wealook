@@ -76,6 +76,15 @@ class _WeatherService:
             Q(location_id__in=location_ids)
         )
 
+    def getTodayMiddayForCountries(self, countries): # today - midday forecast for all specified cities
+        midday = self._getTodayMidday()
+        midday_epoch = int(midday.timestamp())
+
+        return self.model.objects.filter(
+            Q(dt__exact=midday_epoch),
+            Q(location_id__in=location_ids)
+        )
+
     def getTodayForecastForCities(self, location_ids): # today - 3 hour forecast for all specified cities
         today = self._getToday()
         return self.model.objects.filter(
